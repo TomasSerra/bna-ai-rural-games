@@ -1,0 +1,116 @@
+@font-face {
+  font-family: 'Kievit';
+  src: url('/fonts/Kievit-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Kievit';
+  src: url('/fonts/Kievit-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Kievit Black';
+  src: url('/fonts/Kievit-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* BNA palette: dark navy fallback, cyan primary, white text. */
+    --background: 220 70% 14%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 70% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 70% 14%;
+    --primary: 220 70% 14%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 220 70% 14%;
+    --muted: 200 30% 92%;
+    --muted-foreground: 220 30% 35%;
+    --accent: 205 70% 44%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 9 87% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 40% 80%;
+    --input: 200 40% 80%;
+    --ring: 190 78% 51%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 200 90% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 200 90% 45%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html {
+    /* Root font-size relative to viewport height so the whole UI (all
+       Tailwind rem-based sizes) scales proportionally on any TV resolution.
+       At 1920px tall → 24px (current baseline); at 3840px (4K) → 48px (2×). */
+    font-size: 1.25vh;
+  }
+  html,
+  body {
+    touch-action: pan-x pan-y;
+    overscroll-behavior: none;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Kievit', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Kiosk mode: block selection, long-press callout, tap highlight, and image
+     drag on the TV touch screen. The ImagePage (rendered on user's phone after
+     scanning the QR) adds .allow-native-gestures to body to re-enable native
+     long-press → "Save image". */
+  body:not(.allow-native-gestures),
+  body:not(.allow-native-gestures) * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body:not(.allow-native-gestures) img {
+    -webkit-user-drag: none;
+    user-drag: none;
+  }
+  /* Inputs/textareas must keep text selection so the API key dialog works. */
+  body:not(.allow-native-gestures) input,
+  body:not(.allow-native-gestures) textarea,
+  body:not(.allow-native-gestures) [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+}

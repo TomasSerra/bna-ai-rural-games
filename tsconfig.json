@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["./src/shared/*"],
+      "@imagenes/*": ["./src/games/imagenes/*"],
+      "@videos/*": ["./src/games/videos/*"],
+      "@juego-tractor/*": ["./src/games/juego-tractor/*"]
+    }
+  }
+}
