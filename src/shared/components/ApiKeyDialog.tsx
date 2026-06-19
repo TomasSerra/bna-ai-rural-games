@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ interface ApiKeyDialogProps {
 
 export function ApiKeyDialog({ open, onSave, onClose, initialKey = '' }: ApiKeyDialogProps) {
   const [value, setValue] = useState(initialKey);
+  const [showKey, setShowKey] = useState(false);
 
   return (
     <Dialog
@@ -45,26 +46,29 @@ export function ApiKeyDialog({ open, onSave, onClose, initialKey = '' }: ApiKeyD
           <Label htmlFor="api-key" className="text-xl">
             API key
           </Label>
-          <Input
-            id="api-key"
-            type="password"
-            autoComplete="off"
-            placeholder="fal_..."
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && value.trim()) onSave(value.trim());
-            }}
-            className="h-14 px-4 py-3 text-xl"
-          />
-          <a
-            href="https://fal.ai/dashboard/keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-base text-white/80 hover:text-white"
-          >
-            Obtené una clave en fal.ai/dashboard/keys <ExternalLink className="size-5" />
-          </a>
+          <div className="relative">
+            <Input
+              id="api-key"
+              type={showKey ? 'text' : 'password'}
+              autoComplete="off"
+              placeholder="fal_..."
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && value.trim()) onSave(value.trim());
+              }}
+              className="h-14 px-4 py-3 pr-16 text-xl"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey((s) => !s)}
+              aria-label={showKey ? 'Ocultar clave' : 'Mostrar clave'}
+              aria-pressed={showKey}
+              className="absolute right-2 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {showKey ? <EyeOff className="size-6" /> : <Eye className="size-6" />}
+            </button>
+          </div>
         </div>
 
         <DialogFooter className="gap-3 sm:space-x-0">
@@ -76,7 +80,7 @@ export function ApiKeyDialog({ open, onSave, onClose, initialKey = '' }: ApiKeyD
           <Button
             disabled={!value.trim()}
             onClick={() => onSave(value.trim())}
-            className="h-14 px-6 text-xl"
+            className="h-14 bg-white px-6 text-xl text-primary hover:bg-white/90"
           >
             Guardar
           </Button>
