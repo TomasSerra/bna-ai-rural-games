@@ -6,8 +6,11 @@ import { GAME_CONFIG } from '../config';
 import { Hud } from './Hud';
 
 interface GameCanvasProps {
-  /** Se llama con el puntaje final cuando se acaban las vidas. */
-  onGameOver: (finalScore: number) => void;
+  /**
+   * Se llama al acabarse las vidas con el puntaje final y un snapshot (dataURL)
+   * del canvas en ese instante, para mostrarlo congelado en la pantalla final.
+   */
+  onGameOver: (finalScore: number, frame: string) => void;
 }
 
 /**
@@ -24,9 +27,19 @@ export function GameCanvas({ onGameOver }: GameCanvasProps) {
 
   const handleChange = useCallback((s: GameSnapshot) => setSnapshot(s), []);
 
+  // Captura el último frame dibujado (escena del juego) antes de desmontar el
+  // canvas, para usarlo como fondo congelado en la pantalla final.
+  const handleGameOver = useCallback(
+    (finalScore: number) => {
+      const frame = canvasRef.current?.toDataURL('image/png') ?? '';
+      onGameOver(finalScore, frame);
+    },
+    [onGameOver],
+  );
+
   const { error, engineRef } = useGameEngine(canvasRef, {
     onChange: handleChange,
-    onGameOver,
+    onGameOver: handleGameOver,
   });
 
   const onLeft = useCallback(() => engineRef.current?.moveLeft(), [engineRef]);

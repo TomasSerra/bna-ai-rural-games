@@ -1,9 +1,14 @@
-import { drawCover } from './drawing';
-
 /**
- * Fondo con scroll vertical infinito. Dibuja la misma imagen dos veces apiladas
- * (una encima de la otra) y desplaza el offset hacia abajo; al superar el alto del
- * canvas hace wrap, generando el efecto de movimiento continuo arriba→abajo.
+ * Fondo con scroll vertical infinito a partir de una TILE repetible.
+ *
+ * `bg-tile.png` es una tira corta que empalma consigo misma (su borde inferior
+ * coincide con el superior). Se escala al ancho del canvas conservando su
+ * proporción y se apila tantas veces como haga falta para cubrir el alto,
+ * desplazando el stack hacia abajo. Al pasar una altura de tile hace wrap,
+ * generando movimiento continuo arriba→abajo.
+ *
+ * Para cambiar el fondo mañana: reemplazar `bg-tile.png` por otra tira repetible
+ * (cualquier resolución sirve, se reescala al ancho).
  */
 export class ScrollingBackground {
   private offset = 0;
@@ -16,14 +21,20 @@ export class ScrollingBackground {
    * @param height   alto del canvas en px
    */
   update(distance: number, height: number): void {
-    this.offset = (this.offset + distance * height) % height;
+    this.offset += distance * height;
   }
 
   render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    const y = this.offset;
-    // Copia que entra desde arriba.
-    drawCover(ctx, this.img, { x: 0, y: y - height, w: width, h: height });
-    // Copia que sale por abajo.
-    drawCover(ctx, this.img, { x: 0, y, w: width, h: height });
+    // Alto de la tile escalada al ancho del canvas (mantiene proporción).
+    const tileH = width * (this.img.height / this.img.width);
+
+    // Acotar el offset a [0, tileH) para evitar pérdida de precisión en sesiones largas.
+    this.offset %= tileH;
+
+    // Primera tile arranca apenas por encima del borde superior; +1px de solape
+    // entre tiles para que el redondeo subpíxel no abra costuras.
+    for (let y = this.offset - tileH; y < height; y += tileH) {
+      ctx.drawImage(this.img, 0, Math.round(y), width, Math.ceil(tileH) + 1);
+    }
   }
 }

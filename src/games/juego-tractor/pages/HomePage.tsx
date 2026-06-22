@@ -5,7 +5,14 @@ interface HomePageProps {
 /** Pantalla de inicio del juego: título, instrucciones y botón "Jugar". */
 export function HomePage({ onStart }: HomePageProps) {
   return (
-    <div className="relative h-dvh w-dvw overflow-hidden bg-[url('/tractor/bg.png')] bg-cover bg-center">
+    <div
+      className="relative h-dvh w-dvw overflow-hidden bg-black"
+      style={{
+        backgroundImage: "url('/tractor/bg-tile.png')",
+        backgroundRepeat: 'repeat-y',
+        backgroundSize: '100% auto',
+      }}
+    >
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-[2vh] bg-black/55 px-[6vh] text-center">
         <img src="/tractor/tractor.png" alt="" className="h-[22vh] object-contain drop-shadow-lg" />
         <h1 className="m-0 font-kievit-black text-[7vh] leading-none text-white">Esquivá las vacas</h1>

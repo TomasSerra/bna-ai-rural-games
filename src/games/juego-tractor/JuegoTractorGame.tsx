@@ -18,6 +18,8 @@ interface JuegoTractorGameProps {
 export default function JuegoTractorGame({ onExit }: JuegoTractorGameProps) {
   const [page, setPage] = useState<GamePage>('home');
   const [finalScore, setFinalScore] = useState(0);
+  // Snapshot del canvas al perder, para mostrarlo de fondo en la pantalla final.
+  const [finalFrame, setFinalFrame] = useState<string | null>(null);
   // Key para forzar un GameCanvas nuevo en cada partida (resetea el engine).
   const [runId, setRunId] = useState(0);
 
@@ -26,8 +28,9 @@ export default function JuegoTractorGame({ onExit }: JuegoTractorGameProps) {
     setPage('playing');
   }, []);
 
-  const handleGameOver = useCallback((score: number) => {
+  const handleGameOver = useCallback((score: number, frame: string) => {
     setFinalScore(score);
+    setFinalFrame(frame);
     setPage('gameover');
   }, []);
 
@@ -46,7 +49,9 @@ export default function JuegoTractorGame({ onExit }: JuegoTractorGameProps) {
 
       {page === 'home' && <HomePage onStart={startGame} />}
       {page === 'playing' && <GameCanvas key={runId} onGameOver={handleGameOver} />}
-      {page === 'gameover' && <GameOverPage score={finalScore} onExit={onExit} />}
+      {page === 'gameover' && (
+        <GameOverPage score={finalScore} frame={finalFrame} onExit={onExit} />
+      )}
     </div>
   );
 }

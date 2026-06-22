@@ -12,7 +12,7 @@ import type { AssetKey } from './types';
  * renderizan como <img> en el HUD de React (ver `components/Hud.tsx`).
  */
 export const ASSET_SOURCES: Record<AssetKey, string> = {
-  bg: '/tractor/bg.png',
+  bg: '/tractor/bg-tile.png',
   tractor: '/tractor/tractor.png',
   cow: '/tractor/cow.png',
   coin: '/tractor/coin.png',

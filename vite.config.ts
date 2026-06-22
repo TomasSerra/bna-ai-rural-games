@@ -54,7 +54,11 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/imagenes\/descargar/, /^\/videos\/descargar/],
       },
       devOptions: {
-        enabled: true,
+        // Desactivado en dev: el service worker precachea imágenes y servía
+        // versiones viejas de los assets (p.ej. el fondo) al iterar. La PWA
+        // sigue funcionando en la build de producción. Poner en true solo si
+        // necesitás probar el comportamiento offline/instalación en dev.
+        enabled: false,
         type: 'module',
       },
     }),

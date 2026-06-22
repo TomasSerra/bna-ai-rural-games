@@ -1,13 +1,18 @@
 interface GameOverPageProps {
   score: number;
+  /** Snapshot del canvas al perder (dataURL); se muestra de fondo congelado. */
+  frame: string | null;
   /** Finaliza la partida y vuelve a la pantalla de selección (launcher). */
   onExit: () => void;
 }
 
-/** Pantalla de fin de juego: puntaje final y botón para finalizar. */
-export function GameOverPage({ score, onExit }: GameOverPageProps) {
+/** Pantalla de fin de juego: escena congelada + puntaje final y botón para finalizar. */
+export function GameOverPage({ score, frame, onExit }: GameOverPageProps) {
   return (
-    <div className="relative h-dvh w-dvw overflow-hidden bg-[url('/tractor/bg.png')] bg-cover bg-center">
+    <div className="relative h-dvh w-dvw overflow-hidden bg-black">
+      {frame && (
+        <img src={frame} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      )}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-[2vh] bg-black/60 px-[6vh] text-center">
         <img
           src="/shared/logo-bna.png"
