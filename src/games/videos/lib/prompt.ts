@@ -11,6 +11,10 @@ const EXTRA_REFERENCES: Record<string, ExtraReference> = {
     label: 'traditional Argentine mate gourd with a metal bombilla',
     url: '/shared/mate.png',
   },
+  asado: {
+    label: 'costillar a la estaca (beef rib rack mounted on an iron cross stake over the fire)',
+    url: '/shared/costillar.png',
+  },
 };
 
 export interface BuiltImagePrompt {
@@ -49,6 +53,11 @@ export function buildImagePrompt(opciones: Opciones): BuiltImagePrompt {
       ? `The mate gourd is only held in the hand and is NOT being drunk: it is not raised to the lips, the bombilla is not in the mouth, the person is not sipping — the mate simply rests in their hand.`
       : '';
 
+  const asadoLine =
+    opciones.accion === 'asado'
+      ? `Use the second reference image ONLY as the shape and layout guide for the costillar a la estaca (the beef rib rack on the iron cross stake): match its silhouette and structure, but fully re-render it in the same ${stylizedLabel ?? 'photorealistic'} style, materials and lighting as the rest of the scene — do NOT paste it as a flat 2D drawing, it must be a natural three-dimensional part of the scene.`
+      : '';
+
   // El primer renglón fija la PRIORIDAD: para estilos no fotográficos, lo más
   // importante es que sea una conversión total al estilo (no una foto retocada);
   // para "realista" es lo opuesto, una edición fiel de la misma foto.
@@ -72,6 +81,7 @@ export function buildImagePrompt(opciones: Opciones): BuiltImagePrompt {
     identityLine,
     `Action: ${accion}.`,
     mateLine,
+    asadoLine,
     `Scene: ${ambiente}.`,
     extraRef ? `Match the ${extraRef.label} to the second reference image.` : '',
     opciones.estilo === 'caricatura2d'
@@ -96,6 +106,11 @@ export function buildVideoPrompt(opciones: Opciones): BuiltVideoPrompt {
       ? `The mate gourd stays resting in the hand — it is never raised to the lips.`
       : '';
 
+  const asadoLine =
+    opciones.accion === 'asado'
+      ? `The staked rib rack stays planted in place; only the flames and embers flicker and the person tends the fire with small natural movements.`
+      : '';
+
   // Caricatura 2D: dejar explícito que el movimiento es animación 2D dibujada,
   // no 3D ni live-action, para que respete el estilo plano de la imagen.
   const estilo2dLine =
@@ -108,6 +123,7 @@ export function buildVideoPrompt(opciones: Opciones): BuiltVideoPrompt {
     estilo2dLine,
     `Action: ${accion}.`,
     mateLine,
+    asadoLine,
     `Motion: subtle natural movement matching the action, with a slow, gentle cinematic camera push-in; smooth and loopable. No on-screen text, no watermark.`,
   ].filter(Boolean);
 

@@ -6,6 +6,7 @@ import {
   Clapperboard,
   Coffee,
   Dog,
+  Flame,
   Milk,
   Mountain,
   Sprout,
@@ -89,6 +90,12 @@ export const ACCIONES: Option[] = [
     label: 'Tomando mate',
     en: 'holding a traditional Argentine mate gourd with a metal bombilla in one hand at chest height, the mate simply resting in the hand and the person smiling warmly at the camera',
     icon: Coffee,
+  },
+  {
+    id: 'asado',
+    label: 'Asando un costillar',
+    en: 'cooking a traditional Argentine "costillar a la estaca" — a large beef rib rack mounted on an iron cross stake (estaca) planted in the ground, roasting beside glowing embers and open flames; the person stands beside the staked ribs tending the fire with a focused look, shown from the waist up',
+    icon: Flame,
   },
 ];
 

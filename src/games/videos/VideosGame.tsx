@@ -63,15 +63,17 @@ export default function VideosGame({ onExit }: VideosGameProps) {
         initialKey={apiKey}
       />
 
-      {/* Botón visible para volver siempre a la pantalla principal. */}
-      <button
-        type="button"
-        onClick={onExit}
-        className="absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full bg-white/85 px-5 py-3 text-lg font-medium text-primary shadow-md transition-colors hover:bg-white"
-      >
-        <ArrowLeft className="size-5" />
-        Volver
-      </button>
+      {/* Botón para volver: solo en la pantalla de inicio del juego. */}
+      {page === 'home' && (
+        <button
+          type="button"
+          onClick={onExit}
+          className="absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full bg-white/85 px-5 py-3 text-lg font-medium text-primary shadow-md transition-colors hover:bg-white"
+        >
+          <ArrowLeft className="size-5" />
+          Volver
+        </button>
+      )}
 
       {/* Hidden hot-corner: double-tap the top-right corner to open the API key dialog. */}
       <button

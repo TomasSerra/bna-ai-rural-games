@@ -4,6 +4,7 @@ import {
   Clapperboard,
   Coffee,
   Dog,
+  Flame,
   Grape,
   Laugh,
   Milk,
@@ -103,6 +104,12 @@ export const ACCIONES: Option[] = [
     label: 'Esquilando ovejas',
     en: 'shearing a sheep with traditional hand shears, leaning over the sheep with focus',
     icon: Scissors,
+  },
+  {
+    id: 'asado',
+    label: 'Asando un costillar',
+    en: 'cooking a traditional Argentine "costillar a la estaca" — a large beef rib rack mounted on an iron cross stake (estaca) planted in the ground, roasting beside glowing embers and open flames, tending the fire with a focused look',
+    icon: Flame,
   },
 ];
 
