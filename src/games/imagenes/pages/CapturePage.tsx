@@ -1,8 +1,8 @@
-import { Sparkles } from 'lucide-react';
-import { Button } from '@shared/components/ui/button';
-import { PhotoCapture } from '@shared/components/PhotoCapture';
-import { OptionsForm } from '@imagenes/components/OptionsForm';
-import type { Opciones } from '@imagenes/types';
+import { Sparkles } from "lucide-react";
+import { Button } from "@shared/components/ui/button";
+import { PhotoCapture } from "@shared/components/PhotoCapture";
+import { OptionsForm } from "@imagenes/components/OptionsForm";
+import type { Opciones } from "@imagenes/types";
 
 interface CapturePageProps {
   photo: { base64: string; dataUrl: string } | null;
@@ -34,20 +34,29 @@ export function CapturePage({
         </div>
       </section>
 
-      <section className="flex flex-1 min-h-0 flex-col gap-4 overflow-hidden pt-4">
-        <h2 className="text-3xl font-kievit-black tracking-wide text-white drop-shadow-md">Elegí la escena de campo</h2>
-        <div className="flex-1 min-h-0 overflow-auto">
-          <OptionsForm value={opciones} onChange={setOpciones} />
+      <section className="flex shrink-0 flex-col gap-4 pt-4">
+        <div className="relative w-full">
+          <img src="/imagenes/cartel.png" alt="" className="block w-full" />
+          <div className="absolute inset-0 flex flex-col gap-3 px-8 pt-6 pb-1">
+            <h2 className="text-3xl font-kievit-black tracking-wide text-[#FBEFD8] drop-shadow-[0_2px_2px_rgba(0,0,0,0.55)]">
+              Elegí la escena de campo
+            </h2>
+            <div className="flex-1 min-h-0 overflow-auto">
+              <OptionsForm value={opciones} onChange={setOpciones} />
+            </div>
+          </div>
         </div>
-        {photo && (
-          <Button
-            className="h-20 w-full bg-gradient-to-r from-primary to-[#22639C] text-3xl text-primary-foreground hover:from-primary/90 hover:to-[#22639C]/90 [&_svg]:size-8"
-            disabled={!canGenerate}
-            onClick={onGenerate}
-          >
-            <Sparkles /> Generar imagen
-          </Button>
-        )}
+        <div className="h-20 shrink-0">
+          {photo && (
+            <Button
+              className="h-full w-full rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-3xl text-white shadow-xl hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-8"
+              disabled={!canGenerate}
+              onClick={onGenerate}
+            >
+              <Sparkles /> Generar imagen
+            </Button>
+          )}
+        </div>
       </section>
     </div>
   );

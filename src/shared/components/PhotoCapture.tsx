@@ -103,13 +103,13 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
     return (
       <div ref={containerRef} className="flex h-full items-center justify-center">
         <div className="flex flex-col gap-3" style={{ width: columnWidth }}>
-          <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border bg-muted">
+          <div className="aspect-[3/4] w-full overflow-hidden rounded-2xl border-4 border-[#C9A06A] bg-muted shadow-xl">
             <img src={previewUrl} alt="Foto capturada" className="h-full w-full object-cover" />
           </div>
           <Button
             variant="outline"
             onClick={onReset}
-            className="h-16 w-full border-transparent bg-white text-primary text-2xl hover:bg-white/90 hover:text-primary [&_svg]:size-7"
+            className="h-16 w-full rounded-full border-2 border-[#C9A06A] bg-[#FFF8EC] text-[#5B3A1E] text-2xl hover:bg-white hover:text-[#5B3A1E] [&_svg]:size-7"
           >
             <RefreshCw /> Volver a tomar la foto
           </Button>
@@ -121,7 +121,7 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
   return (
     <div ref={containerRef} className="flex h-full items-center justify-center">
       <div className="flex flex-col gap-3" style={{ width: columnWidth }}>
-        <div className="aspect-[3/4] w-full overflow-hidden rounded-lg border bg-muted">
+        <div className="aspect-[3/4] w-full overflow-hidden rounded-2xl border-4 border-[#C9A06A] bg-muted shadow-xl">
           {error ? (
             <div className="flex h-full items-center justify-center p-4">
               <Alert variant="destructive">
@@ -141,7 +141,7 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
         <Button
           onClick={capture}
           disabled={!streaming}
-          className="h-16 w-full text-2xl [&_svg]:size-7"
+          className="h-16 w-full rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-2xl text-white shadow-lg hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-7"
         >
           <Camera /> Capturar foto
         </Button>

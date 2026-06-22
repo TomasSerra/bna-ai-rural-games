@@ -57,7 +57,7 @@ export function OptionsForm({ value, onChange, disabled }: OptionsFormProps) {
 function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-3">
-      <p className="text-xl font-medium leading-none">{label}</p>
+      <p className="text-xl font-kievit-black leading-none text-[#FBEFD8] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">{label}</p>
       <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-3">
         {children}
       </div>

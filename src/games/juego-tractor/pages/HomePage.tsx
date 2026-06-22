@@ -5,25 +5,26 @@ interface HomePageProps {
 /** Pantalla de inicio del juego: título, instrucciones y botón "Jugar". */
 export function HomePage({ onStart }: HomePageProps) {
   return (
-    <div
-      className="relative h-dvh w-dvw overflow-hidden bg-black"
-      style={{
-        backgroundImage: "url('/tractor/bg-tile.png')",
-        backgroundRepeat: 'repeat-y',
-        backgroundSize: '100% auto',
-      }}
-    >
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-[2vh] bg-black/55 px-[6vh] text-center">
-        <img src="/tractor/tractor.png" alt="" className="h-[22vh] object-contain drop-shadow-lg" />
-        <h1 className="m-0 font-kievit-black text-[7vh] leading-none text-white">Esquivá las vacas</h1>
-        <p className="m-0 max-w-[60vh] text-[3vh] font-medium text-white/90">
-          Manejá el tractor, esquivá las vacas y juntá monedas. Deslizá o usá las flechas
-          para cambiar de carril.
+    <div className="flex h-dvh w-dvw flex-col items-center justify-between overflow-hidden bg-[url('/tractor/bg-tractor-game.png')] bg-cover bg-center bg-no-repeat">
+      <div className="flex w-full flex-1 flex-col items-center pt-[2dvh]">
+        <img
+          src="/shared/logo-bna.png"
+          alt="BNA"
+          className="w-48 sm:w-48 mb-8"
+        />
+
+        <h1 className="m-0 text-center text-7xl font-kievit-black leading-tight text-white">
+          Esquivá las vacas
+        </h1>
+        <p className="mb-0 mt-6 w-[90%] text-center text-3xl font-medium text-white sm:text-4xl">
+          Manejá el tractor, esquivá las vacas y juntá monedas
         </p>
+      </div>
+      <div className="flex w-full items-center justify-center pb-[8dvh]">
         <button
           type="button"
           onClick={onStart}
-          className="mt-[2vh] rounded-full border-2 border-white bg-transparent px-[8vh] py-[2vh] text-[4vh] font-extrabold tracking-wide text-white transition-transform active:scale-95"
+          className="rounded-full bg-white px-32 py-8 text-3xl font-kievit-black tracking-wide text-black transition-transform active:scale-95 sm:text-5xl"
         >
           JUGAR
         </button>

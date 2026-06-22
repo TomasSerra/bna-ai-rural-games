@@ -11,17 +11,27 @@ export function GameOverPage({ score, frame, onExit }: GameOverPageProps) {
   return (
     <div className="relative h-dvh w-dvw overflow-hidden bg-black">
       {frame && (
-        <img src={frame} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={frame}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       )}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-[2vh] bg-black/60 px-[6vh] text-center">
         <img
           src="/shared/logo-bna.png"
           alt="BNA"
-          className="absolute left-1/2 top-[4vh] w-[28vh] -translate-x-1/2 object-contain"
+          className="w-[20vh] object-contain mb-[2vh]"
         />
-        <h1 className="m-0 font-kievit-black text-[8vh] leading-none text-white">¡Bien jugado!</h1>
-        <p className="m-0 text-[3.5vh] font-medium text-white/90">Tu puntaje</p>
-        <p className="m-0 font-kievit-black text-[10vh] leading-none text-yellow-400">{score}</p>
+        <h1 className="m-0 font-kievit-black text-[7vh] leading-none text-white">
+          ¡Bien jugado!
+        </h1>
+        <p className="m-0 text-[3.5vh] font-medium text-white/90 mt-[2vh]">
+          Tu puntaje
+        </p>
+        <p className="m-0 font-kievit-black text-[10vh] mt-[-2vh] leading-none text-yellow-400">
+          {score}
+        </p>
 
         <button
           type="button"
