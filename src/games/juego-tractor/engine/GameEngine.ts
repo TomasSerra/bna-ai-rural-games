@@ -27,9 +27,9 @@ export class GameEngine {
 
   // Estado del juego.
   private score = 0;
-  private lives = GAME_CONFIG.lives;
+  private lives: number = GAME_CONFIG.lives;
   private elapsed = 0;
-  private speed = GAME_CONFIG.speed.base;
+  private speed: number = GAME_CONFIG.speed.base;
   private entities: Entity[] = [];
   private currentLane = Math.floor(GAME_CONFIG.lanes / 2);
   private tractorXFrac = 0; // se inicializa en resize()
