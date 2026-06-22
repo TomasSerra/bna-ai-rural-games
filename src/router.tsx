@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { Launcher } from './launcher/Launcher';
 import ImagenesGame from './games/imagenes/ImagenesGame';
 import { ImagePage } from './games/imagenes/public/ImagePage';
-import JuegoTractorPlaceholder from './games/juego-tractor/JuegoTractorPlaceholder';
+import JuegoTractorGame from './games/juego-tractor/JuegoTractorGame';
 
 // Code-split the videos game + its public page: mediabunny (WebCodecs) is heavy
 // and only needed on the videos routes, so the launcher and the imágenes game
@@ -51,8 +51,8 @@ export function AppRoutes() {
         }
       />
 
-      {/* Tercer juego (placeholder) */}
-      <Route path="/juego-tractor" element={<JuegoTractorPlaceholder onExit={goToLauncher} />} />
+      {/* Juego del tractor */}
+      <Route path="/juego-tractor" element={<JuegoTractorGame onExit={goToLauncher} />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
