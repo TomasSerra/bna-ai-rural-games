@@ -13,6 +13,28 @@ interface GameCanvasProps {
   onGameOver: (finalScore: number, frame: string) => void;
 }
 
+/** Ancho máximo del snapshot final; lo dibujamos a object-cover bajo un overlay. */
+const SNAPSHOT_MAX_WIDTH = 960;
+
+/**
+ * Captura el último frame como JPEG escalado para el fondo de la pantalla final.
+ * Usar JPEG (en vez de PNG) y reducir la resolución evita que el encode sincrónico
+ * trabe el hilo principal varios segundos en dispositivos poco potentes (Android TV).
+ */
+function captureFrame(canvas: HTMLCanvasElement | null): string {
+  if (!canvas) return '';
+  const scale = Math.min(1, SNAPSHOT_MAX_WIDTH / canvas.width);
+  if (scale === 1) return canvas.toDataURL('image/jpeg', 0.8);
+
+  const off = document.createElement('canvas');
+  off.width = Math.round(canvas.width * scale);
+  off.height = Math.round(canvas.height * scale);
+  const ctx = off.getContext('2d');
+  if (!ctx) return canvas.toDataURL('image/jpeg', 0.8);
+  ctx.drawImage(canvas, 0, 0, off.width, off.height);
+  return off.toDataURL('image/jpeg', 0.8);
+}
+
 /**
  * Monta el canvas del juego (con el game loop vía `useGameEngine`), conecta el input
  * (teclado + swipe) y pinta el HUD por encima.
@@ -31,8 +53,7 @@ export function GameCanvas({ onGameOver }: GameCanvasProps) {
   // canvas, para usarlo como fondo congelado en la pantalla final.
   const handleGameOver = useCallback(
     (finalScore: number) => {
-      const frame = canvasRef.current?.toDataURL('image/png') ?? '';
-      onGameOver(finalScore, frame);
+      onGameOver(finalScore, captureFrame(canvasRef.current));
     },
     [onGameOver],
   );

@@ -170,7 +170,7 @@ export function ImagePage() {
   };
 
   return (
-    <div className="flex min-h-dvh w-dvw flex-col items-center gap-4 bg-[url('/imagenes/bg-game.png')] bg-cover bg-center bg-no-repeat p-4">
+    <div className="flex min-h-dvh w-dvw flex-col items-center gap-4 bg-[linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url('/imagenes/bg-game.png')] bg-cover bg-center bg-no-repeat p-4">
       {errorMsg && (
         <Alert variant="destructive" className="max-w-md">
           <AlertTitle>No pudimos preparar la imagen</AlertTitle>

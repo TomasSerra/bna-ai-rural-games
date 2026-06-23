@@ -55,7 +55,7 @@ export default function ImagenesGame({ onExit }: ImagenesGameProps) {
   };
 
   return (
-    <div className="h-dvh w-dvw overflow-hidden bg-[url('/imagenes/bg-game.png')] bg-cover bg-center bg-no-repeat">
+    <div className="h-dvh w-dvw overflow-hidden bg-[linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url('/imagenes/bg-game.png')] bg-cover bg-center bg-no-repeat">
       <ApiKeyDialog
         open={keyDialogOpen}
         onSave={handleSaveKey}

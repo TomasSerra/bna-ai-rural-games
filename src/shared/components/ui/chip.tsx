@@ -27,7 +27,7 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
           "disabled:opacity-50 disabled:pointer-events-none",
           selected
             ? "border-[#356B22] bg-[#5AA63B] text-white shadow-md hover:bg-[#4f9633]"
-            : "border-[#D8B98C] bg-[#FFF8EC] text-[#5B3A1E] shadow-sm hover:bg-white",
+            : "border-[#D8B98C] bg-white text-[#26180d] shadow-sm hover:bg-white",
           className,
         )}
         {...props}

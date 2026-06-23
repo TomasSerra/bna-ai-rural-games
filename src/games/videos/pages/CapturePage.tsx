@@ -1,8 +1,8 @@
-import { Sparkles } from 'lucide-react';
-import { Button } from '@shared/components/ui/button';
-import { PhotoCapture } from '@shared/components/PhotoCapture';
-import { OptionsForm } from '@videos/components/OptionsForm';
-import type { Opciones } from '@videos/types';
+import { Sparkles } from "lucide-react";
+import { Button } from "@shared/components/ui/button";
+import { PhotoCapture } from "@shared/components/PhotoCapture";
+import { OptionsForm } from "@videos/components/OptionsForm";
+import type { Opciones } from "@videos/types";
 
 interface CapturePageProps {
   photo: { base64: string; dataUrl: string } | null;
@@ -38,7 +38,9 @@ export function CapturePage({
         <div className="relative w-full">
           <img src="/videos/cartel.png" alt="" className="block w-full" />
           <div className="absolute inset-0 flex flex-col gap-3 px-8 pt-6 pb-1">
-            <h2 className="text-3xl font-kievit-black tracking-wide text-[#FBEFD8] drop-shadow-[0_2px_2px_rgba(0,0,0,0.55)]">Elegí la escena de campo</h2>
+            <h2 className="text-3xl font-kievit-black tracking-wide text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.55)]">
+              Elegí la escena de campo
+            </h2>
             <div className="flex-1 min-h-0 overflow-auto">
               <OptionsForm value={opciones} onChange={setOpciones} />
             </div>
