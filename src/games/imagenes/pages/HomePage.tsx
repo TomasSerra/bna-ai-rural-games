@@ -4,7 +4,7 @@ interface HomePageProps {
 
 export function HomePage({ onStart }: HomePageProps) {
   return (
-    <div className="flex h-dvh w-dvw flex-col items-center justify-between overflow-hidden bg-[url('/videos/bg-home.png')] bg-cover bg-center bg-no-repeat">
+    <div className="flex h-dvh w-dvw flex-col items-center justify-between overflow-hidden bg-[url('/imagenes/bg-home.png')] bg-cover bg-center bg-no-repeat">
       <div className="flex w-full flex-1 flex-col items-center pt-[2dvh]">
         <img
           src="/shared/logo-bna.png"
@@ -12,7 +12,7 @@ export function HomePage({ onStart }: HomePageProps) {
           className="w-48 sm:w-48 mb-8"
         />
 
-        <h1 className="m-0 text-center text-7xl font-kievit-black leading-tight text-white">
+        <h1 className="m-0 text-center text-7xl font-kievit-black leading-none text-white">
           Generá tu
           <br />
           imagen con IA

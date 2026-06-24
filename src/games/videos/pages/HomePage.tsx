@@ -12,7 +12,7 @@ export function HomePage({ onStart }: HomePageProps) {
           className="w-48 sm:w-48 mb-8"
         />
 
-        <h1 className="m-0 text-center text-7xl font-kievit-black leading-tight text-white">
+        <h1 className="m-0 text-center text-7xl font-kievit-black leading-none text-white">
           Generá tu
           <br />
           video con IA
