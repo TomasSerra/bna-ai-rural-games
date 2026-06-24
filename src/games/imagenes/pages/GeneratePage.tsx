@@ -150,7 +150,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
       </header>
 
       <div className="flex flex-1 min-h-0 items-center justify-center">
-        <div className="relative aspect-[9/16] h-full max-h-full w-auto max-w-full overflow-hidden rounded-lg border bg-muted">
+        <div className="relative aspect-[9/16] h-full max-h-full w-auto max-w-full overflow-hidden rounded-2xl border-4 border-[#C9A06A] bg-muted">
           {phase === 'generating' && (
             <>
               <img
@@ -210,7 +210,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
       {phase === 'done' && (
         <Button
           onClick={onDone}
-          className="h-16 w-full bg-primary text-2xl text-primary-foreground hover:bg-primary/90 [&_svg]:size-7"
+          className="h-16 w-full rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-2xl text-white shadow-xl hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-7"
         >
           <ThumbsUp /> Listo
         </Button>
@@ -235,7 +235,10 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
       )}
 
       {phase === 'error' && (
-        <Button onClick={regenerate} className="h-16 w-full text-2xl [&_svg]:size-7">
+        <Button
+          onClick={regenerate}
+          className="h-16 w-full rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-2xl text-white shadow-xl hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-7"
+        >
           <RotateCw /> Reintentar
         </Button>
       )}

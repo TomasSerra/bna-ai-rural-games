@@ -193,7 +193,7 @@ export function ImagePage() {
             src={previewSrc}
             alt="Tu imagen Mundial"
             draggable
-            className="max-h-[80dvh] w-auto max-w-full rounded-lg border bg-muted object-contain shadow-sm"
+            className="max-h-[80dvh] w-auto max-w-full rounded-2xl border-4 border-[#C9A06A] bg-muted object-contain shadow-xl"
             style={{
               WebkitTouchCallout: 'default',
               WebkitUserSelect: 'auto',
@@ -204,7 +204,7 @@ export function ImagePage() {
           <Button
             onClick={handleDownload}
             disabled={downloading}
-            className="h-20 w-[90%] text-3xl [&_svg]:size-8 gap-4"
+            className="h-20 w-[90%] gap-4 rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-3xl text-white shadow-xl hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-8"
           >
             {downloading ? (
               <>

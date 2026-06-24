@@ -7,7 +7,7 @@ export type GamePage = 'home' | 'playing' | 'gameover';
 export type EntityKind = 'enemy' | 'coin';
 
 /** Clave de un asset en el manifest (`assets.ts`). */
-export type AssetKey = 'bg' | 'tractor' | 'cow' | 'coin';
+export type AssetKey = 'bg' | 'tractor' | 'cow' | 'pig' | 'fardo' | 'coin';
 
 /** Caja en píxeles de canvas (footprint donde se dibuja un sprite). */
 export interface Box {

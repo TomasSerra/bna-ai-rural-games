@@ -15,6 +15,8 @@ export const ASSET_SOURCES: Record<AssetKey, string> = {
   bg: '/tractor/bg-tile.png',
   tractor: '/tractor/tractor.png',
   cow: '/tractor/cow.png',
+  pig: '/tractor/pig.png',
+  fardo: '/tractor/fardo.png',
   coin: '/tractor/coin.png',
 };
 

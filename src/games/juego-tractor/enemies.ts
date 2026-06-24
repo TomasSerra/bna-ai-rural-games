@@ -15,6 +15,18 @@ export const ENEMY_TYPES: EnemyType[] = [
     sizeSlot: { wFrac: 0.13, hFrac: 0.17 },
     weight: 1,
   },
+  {
+    id: 'pig',
+    asset: 'pig',
+    sizeSlot: { wFrac: 0.13, hFrac: 0.17 },
+    weight: 1,
+  },
+  {
+    id: 'fardo',
+    asset: 'fardo',
+    sizeSlot: { wFrac: 0.13, hFrac: 0.17 },
+    weight: 1,
+  },
 ];
 
 /** Elige un tipo de enemigo al azar, ponderado por `weight`. */

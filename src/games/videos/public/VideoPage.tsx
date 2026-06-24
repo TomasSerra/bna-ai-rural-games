@@ -131,7 +131,7 @@ export function VideoPage() {
 
       {!errorMsg && (
         <>
-          <div className="relative aspect-[9/16] h-[80dvh] max-w-full overflow-hidden rounded-lg border bg-muted shadow-sm">
+          <div className="relative aspect-[9/16] h-[80dvh] max-w-full overflow-hidden rounded-2xl border-4 border-[#C9A06A] bg-muted shadow-xl">
             {previewUrl && (
               <video
                 src={previewUrl}
@@ -160,7 +160,7 @@ export function VideoPage() {
           <Button
             onClick={handleDownload}
             disabled={!downloadFile || downloading}
-            className="h-20 w-[90%] text-3xl [&_svg]:size-8 gap-4"
+            className="h-20 w-[90%] gap-4 rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-3xl text-white shadow-xl hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-8"
           >
             {!downloadFile || downloading ? (
               <>

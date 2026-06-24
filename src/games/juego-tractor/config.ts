@@ -36,7 +36,7 @@ export const GAME_CONFIG = {
     /** Centro horizontal del camino (fracción del ancho). */
     centerXFrac: 0.5,
     /** Ancho del camino (fracción del ancho del canvas). */
-    widthFrac: 0.52,
+    widthFrac: 0.6,
   },
 
   tractor: {
@@ -54,9 +54,9 @@ export const GAME_CONFIG = {
   /** Velocidad de scroll del fondo y de caída de las entidades. */
   speed: {
     /** Velocidad inicial (fracciones de alto por segundo). */
-    base: 0.45,
+    base: 0.4,
     /** Velocidad máxima a la que puede llegar. */
-    max: 1.3,
+    max: 1.5,
   },
 
   /** Progresión de dificultad. */
@@ -64,9 +64,9 @@ export const GAME_CONFIG = {
     /** Cuánto sube la velocidad por segundo transcurrido. */
     speedIncreasePerSecond: 0.012,
     /** Intervalo inicial entre spawns (segundos). */
-    spawnIntervalBase: 0.8,
+    spawnIntervalBase: 1,
     /** Intervalo mínimo al que puede bajar (segundos). */
-    spawnIntervalMin: 0.32,
+    spawnIntervalMin: 0.4,
     /** Cuánto baja el intervalo de spawn por segundo transcurrido. */
     spawnIntervalDecPerSecond: 0.015,
     /** Variación aleatoria (+/-) aplicada a cada intervalo de spawn (segundos). */

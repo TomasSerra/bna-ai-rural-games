@@ -47,7 +47,7 @@ export function Launcher() {
             key={to}
             type="button"
             onClick={() => navigate(to)}
-            className="group flex aspect-[4/5] w-72 flex-col overflow-hidden rounded-3xl text-left text-white shadow-xl transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl active:translate-y-0"
+            className="group flex aspect-[4/5] w-60 flex-col overflow-hidden rounded-3xl text-left text-white shadow-xl transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl active:translate-y-0 sm:w-72"
           >
             <span className="w-full bg-white px-4 py-3 text-center font-kievit-black text-2xl leading-tight tracking-wide text-black">
               {label}
