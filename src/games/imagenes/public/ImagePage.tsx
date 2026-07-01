@@ -3,20 +3,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@shared/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@shared/components/ui/alert';
 
-/**
- * Tunable watermark parameters. Change these to adjust position, size, or
- * intensity of the bottom text + logo overlay without touching compose logic.
- */
-const WATERMARK = {
-  text: 'Salgamos al campo con',
-  textSizePct: 0.05, // font size = 4% of canvas width
-  logoHeightMultiplier: 1.6, // logo height = 1.6× font size
-  bottomMarginPct: 0.025, // bottom margin for the text+logo block
-  gapPct: 0.015, // horizontal gap between text and logo
-  gradientHeightPct: 0.2, // gradient covers the bottom 28% of the canvas
-  gradientAlpha: 1, // gradient opacity at the very bottom
-  logoSrc: '/shared/logo-bna.png',
-} as const;
+const WATERMARK_URL = '/videos/watermark.png';
 
 function loadImage(src: string, crossOrigin?: 'anonymous'): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -29,9 +16,9 @@ function loadImage(src: string, crossOrigin?: 'anonymous'): Promise<HTMLImageEle
 }
 
 async function composeWatermarked(falUrl: string): Promise<HTMLCanvasElement> {
-  const [photo, logo] = await Promise.all([
+  const [photo, watermark] = await Promise.all([
     loadImage(falUrl, 'anonymous'),
-    loadImage(WATERMARK.logoSrc),
+    loadImage(WATERMARK_URL),
   ]);
 
   const canvas = document.createElement('canvas');
@@ -40,51 +27,11 @@ async function composeWatermarked(falUrl: string): Promise<HTMLCanvasElement> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('No pude inicializar el canvas.');
 
-  const W = canvas.width;
-  const H = canvas.height;
-
-  // 1) Base photo
   ctx.drawImage(photo, 0, 0);
 
-  // 2) Bottom black-to-transparent gradient (transparent at top, dark at bottom)
-  const gh = H * WATERMARK.gradientHeightPct;
-  const grad = ctx.createLinearGradient(0, H - gh, 0, H);
-  grad.addColorStop(0, 'rgba(0,0,0,0)');
-  grad.addColorStop(1, `rgba(0,0,0,${WATERMARK.gradientAlpha})`);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, H - gh, W, gh);
-
-  // 3) Make sure the Kievit webfont is loaded before measuring/drawing.
-  const fontPx = Math.round(W * WATERMARK.textSizePct);
-  const fontSpec = `700 ${fontPx}px "Kievit", sans-serif`;
-  try {
-    await document.fonts.load(fontSpec, WATERMARK.text);
-  } catch {
-    // Fall through to default font if loading fails.
-  }
-
-  // 4) Measure to center the [text][gap][logo] block horizontally.
-  ctx.font = fontSpec;
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  const textW = ctx.measureText(WATERMARK.text).width;
-
-  const logoH = fontPx * WATERMARK.logoHeightMultiplier;
-  const logoW = logoH * (logo.naturalWidth / logo.naturalHeight);
-  const gap = W * WATERMARK.gapPct;
-  const totalW = textW + gap + logoW;
-
-  const blockH = Math.max(fontPx, logoH);
-  const marginBottom = H * WATERMARK.bottomMarginPct;
-  const centerY = H - marginBottom - blockH / 2;
-  const startX = (W - totalW) / 2;
-
-  // 5) White text
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(WATERMARK.text, startX, centerY);
-
-  // 6) Logo to the right of the text
-  ctx.drawImage(logo, startX + textW + gap, centerY - logoH / 2, logoW, logoH);
+  // Same burn-in watermark as the video download: full width, anchored bottom.
+  const watermarkHeight = canvas.width * (watermark.naturalHeight / watermark.naturalWidth);
+  ctx.drawImage(watermark, 0, canvas.height - watermarkHeight, canvas.width, watermarkHeight);
 
   return canvas;
 }

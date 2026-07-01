@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 interface GameEntry {
   to: string;
@@ -9,22 +9,24 @@ interface GameEntry {
 
 const GAMES: GameEntry[] = [
   {
-    to: '/imagenes',
-    label: 'Imágen IA',
-    description: 'Sacate una foto y convertila en una imagen con inteligencia artificial.',
-    image: '/launcher/card-imagen.png',
+    to: "/imagenes",
+    label: "Imágen IA",
+    description:
+      "Sacate una foto y convertila en una imagen con inteligencia artificial.",
+    image: "/launcher/card-imagen.png",
   },
   {
-    to: '/videos',
-    label: 'Video IA',
-    description: 'Sacate una foto y generá un video animado con inteligencia artificial.',
-    image: '/launcher/card-videos.png',
+    to: "/videos",
+    label: "Video IA",
+    description:
+      "Sacate una foto y generá un video animado con inteligencia artificial.",
+    image: "/launcher/card-videos.png",
   },
   {
-    to: '/juego-tractor',
-    label: 'Juego tractor',
-    description: 'Manejá el tractor, esquivá las vacas y juntá monedas.',
-    image: '/launcher/card-tractor.png',
+    to: "/juego-tractor",
+    label: "Juego tractor",
+    description: "Manejá el tractor, junta monedas y esquiva los obstáculos",
+    image: "/launcher/card-tractor.png",
   },
 ];
 
@@ -35,9 +37,13 @@ export function Launcher() {
     <div className="relative flex h-dvh w-dvw flex-col items-center justify-center gap-12 overflow-hidden bg-[url('/imagenes/bg-game.png')] bg-cover bg-center bg-no-repeat px-8 py-10">
       <div aria-hidden className="absolute inset-0 z-0 bg-black/40" />
       <header className="relative z-10 flex flex-col items-center gap-5 text-center text-white">
-        <img src="/shared/logo-bna.png" alt="Banco Nación" className="h-16 w-auto" />
+        <img
+          src="/shared/logo-bna.png"
+          alt="Banco Nación"
+          className="h-16 w-auto"
+        />
         <h1 className="font-kievit-black text-4xl tracking-wide md:text-5xl">
-          ¿Qué querés jugar?
+          ¡Elegí un juego!
         </h1>
       </header>
 

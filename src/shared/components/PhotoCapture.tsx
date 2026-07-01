@@ -18,9 +18,11 @@ const PHOTO_ASPECT = 3 / 4;
 export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: PhotoCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const countdownTimerRef = useRef<number | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [columnWidth, setColumnWidth] = useState<number | undefined>();
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -65,7 +67,17 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
     };
   }, [hasPhoto]);
 
-  const capture = () => {
+  useEffect(() => {
+    if (hasPhoto) setCountdown(null);
+  }, [hasPhoto]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) window.clearTimeout(countdownTimerRef.current);
+    };
+  }, []);
+
+  const capturePhoto = () => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -99,6 +111,27 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
     onCapture({ base64, dataUrl });
   };
 
+  const startCountdown = () => {
+    if (!streaming || countdown !== null) return;
+
+    setCountdown(3);
+
+    const tick = (nextValue: number) => {
+      countdownTimerRef.current = window.setTimeout(() => {
+        if (nextValue > 0) {
+          setCountdown(nextValue);
+          tick(nextValue - 1);
+          return;
+        }
+
+        setCountdown(null);
+        capturePhoto();
+      }, 1000);
+    };
+
+    tick(2);
+  };
+
   if (hasPhoto && previewUrl) {
     return (
       <div ref={containerRef} className="flex h-full items-center justify-center">
@@ -121,7 +154,7 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
   return (
     <div ref={containerRef} className="flex h-full items-center justify-center">
       <div className="flex flex-col gap-3" style={{ width: columnWidth }}>
-        <div className="aspect-[3/4] w-full overflow-hidden rounded-2xl border-4 border-[#C9A06A] bg-muted shadow-xl">
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border-4 border-[#C9A06A] bg-muted shadow-xl">
           {error ? (
             <div className="flex h-full items-center justify-center p-4">
               <Alert variant="destructive">
@@ -136,11 +169,18 @@ export function PhotoCapture({ onCapture, hasPhoto, previewUrl, onReset }: Photo
               className="h-full w-full object-cover [transform:scaleX(-1)]"
             />
           )}
+          {countdown !== null && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/20">
+              <span className="font-kievit-black text-[10rem] leading-none text-white drop-shadow-[0_8px_18px_rgba(0,0,0,0.8)]">
+                {countdown}
+              </span>
+            </div>
+          )}
         </div>
 
         <Button
-          onClick={capture}
-          disabled={!streaming}
+          onClick={startCountdown}
+          disabled={!streaming || countdown !== null}
           className="h-16 w-full rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] text-2xl text-white shadow-lg hover:from-[#7cc049] hover:to-[#46892f] [&_svg]:size-7"
         >
           <Camera /> Capturar foto
