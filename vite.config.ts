@@ -1,11 +1,19 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { VitePWA } from 'vite-plugin-pwa';
+import { apiDevServer } from './api/dev-server-plugin';
 
-export default defineConfig({
-  plugins: [
-    react(),
+export default defineConfig(({ mode }) => {
+  // The `api/` handlers read Brevo config from process.env. Vite only exposes
+  // VITE_-prefixed vars to the client, so load the rest of `.env` into
+  // process.env here for the dev API middleware.
+  Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
+
+  return {
+    plugins: [
+      apiDevServer(),
+      react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: [
@@ -63,12 +71,13 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
-    alias: {
-      '@shared': path.resolve(__dirname, './src/shared'),
-      '@imagenes': path.resolve(__dirname, './src/games/imagenes'),
-      '@videos': path.resolve(__dirname, './src/games/videos'),
-      '@juego-tractor': path.resolve(__dirname, './src/games/juego-tractor'),
+    resolve: {
+      alias: {
+        '@shared': path.resolve(__dirname, './src/shared'),
+        '@imagenes': path.resolve(__dirname, './src/games/imagenes'),
+        '@videos': path.resolve(__dirname, './src/games/videos'),
+        '@juego-tractor': path.resolve(__dirname, './src/games/juego-tractor'),
+      },
     },
-  },
+  };
 });

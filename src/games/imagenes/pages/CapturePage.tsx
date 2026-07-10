@@ -41,7 +41,7 @@ export function CapturePage({
             <h2 className="text-3xl font-kievit-black tracking-wide text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.55)]">
               Elegí la escena de campo
             </h2>
-            <div className="flex-1 min-h-0 overflow-auto">
+            <div className="flex-1 min-h-0 overflow-auto pb-6">
               <OptionsForm value={opciones} onChange={setOpciones} />
             </div>
           </div>

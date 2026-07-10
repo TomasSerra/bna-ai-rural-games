@@ -5,6 +5,7 @@ import { ArrowLeft, RotateCw, ThumbsUp } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Alert, AlertDescription, AlertTitle } from '@shared/components/ui/alert';
 import { Button } from '@shared/components/ui/button';
+import { EmailSendDialog } from '@shared/components/EmailSendDialog';
 import { Skeleton } from '@shared/components/ui/skeleton';
 import { FluxError, generateImage } from '@imagenes/lib/flux';
 import { buildPrompt } from '@imagenes/lib/prompt';
@@ -225,11 +226,12 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
               className="h-full w-full"
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1">
             <p className="text-2xl font-kievit-black tracking-wide text-black">Escaneá para llevártela</p>
             <p className="text-lg text-black">
               Apuntá la cámara de tu celular al QR
             </p>
+            <EmailSendDialog mediaType="image" mediaUrl={publicUrl} />
           </div>
         </div>
       )}
