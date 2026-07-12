@@ -21,10 +21,10 @@ interface EmailSendDialogProps {
   mediaUrl: string;
 }
 
-function getSuccessMessage(mediaType: MediaType) {
+function getSuccessMessage(mediaType: MediaType, email: string) {
   return mediaType === 'image'
-    ? 'La imagen fue enviada con exito.'
-    : 'El video fue enviado con exito.';
+    ? `La imagen fue enviada con exito a ${email}.`
+    : `El video fue enviado con exito a ${email}.`;
 }
 
 function getDescription(mediaType: MediaType) {
@@ -50,7 +50,8 @@ export function EmailSendDialog({ mediaType, mediaUrl }: EmailSendDialogProps) {
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
-    if (nextOpen) resetFeedback();
+    setEmail('');
+    resetFeedback();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -83,7 +84,8 @@ export function EmailSendDialog({ mediaType, mediaUrl }: EmailSendDialogProps) {
       }
 
       setStatus('success');
-      setMessage(getSuccessMessage(mediaType));
+      setMessage(getSuccessMessage(mediaType, trimmedEmail));
+      setEmail('');
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'No pudimos enviar el email.');
@@ -149,8 +151,16 @@ export function EmailSendDialog({ mediaType, mediaUrl }: EmailSendDialogProps) {
 
           <DialogFooter className="gap-3 sm:space-x-0">
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              className="h-12 rounded-full border-2 border-gray-300 bg-white px-8 text-lg text-black shadow-md hover:bg-gray-50"
+            >
+              Cerrar
+            </Button>
+            <Button
               type="submit"
-              disabled={status === 'sending'}
+              disabled={status === 'sending' || !isValidEmail(email.trim())}
               className="h-12 rounded-full border-2 border-[#356B22] bg-gradient-to-b from-[#6FB23E] to-[#3E7D29] px-8 text-lg text-white shadow-md hover:from-[#7cc049] hover:to-[#46892f]"
             >
               {status === 'sending' ? (
