@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Launcher } from './launcher/Launcher';
 import ImagenesGame from './games/imagenes/ImagenesGame';
 import { ImagePage } from './games/imagenes/public/ImagePage';
 import JuegoTractorGame from './games/juego-tractor/JuegoTractorGame';
+import { IdleScreenOverlay } from '@shared/components/IdleScreenOverlay';
 
 // Code-split the videos game + its public page: mediabunny (WebCodecs) is heavy
 // and only needed on the videos routes, so the launcher and the imágenes game
@@ -21,11 +22,19 @@ function GameLoading() {
   );
 }
 
+// Rutas públicas (se abren en el celular del visitante tras escanear el QR):
+// ahí NO queremos la pantalla de inactividad del kiosco.
+const PUBLIC_ROUTES = ['/imagenes/descargar', '/videos/descargar'];
+
 export function AppRoutes() {
   const navigate = useNavigate();
+  const location = useLocation();
   const goToLauncher = () => navigate('/');
 
+  const isPublicRoute = PUBLIC_ROUTES.some((p) => location.pathname.startsWith(p));
+
   return (
+    <>
     <Routes>
       <Route path="/" element={<Launcher />} />
 
@@ -56,5 +65,8 @@ export function AppRoutes() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+
+    {!isPublicRoute && <IdleScreenOverlay />}
+    </>
   );
 }

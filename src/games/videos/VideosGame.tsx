@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { ApiKeyDialog } from '@shared/components/ApiKeyDialog';
-import { IdleVideoOverlay } from '@shared/components/IdleVideoOverlay';
 import { CapturePage } from '@videos/pages/CapturePage';
 import { GeneratePage } from '@videos/pages/GeneratePage';
 import { HomePage } from '@videos/pages/HomePage';
@@ -106,7 +105,6 @@ export default function VideosGame({ onExit }: VideosGameProps) {
         />
       )}
 
-      <IdleVideoOverlay />
     </div>
   );
 }
