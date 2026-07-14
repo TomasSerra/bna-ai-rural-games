@@ -70,7 +70,7 @@ export function IdleScreenOverlay() {
       <div className="flex flex-col items-center gap-6">
         {/* Titular */}
         <h1 className="font-kievit-black text-4xl leading-9 tracking-wide text-white md:text-6xl">
-          Banco Nación,
+          Banco Nación
           <br />
           cumple <span className="text-[#f4d160]">135</span> años y
           <br />
