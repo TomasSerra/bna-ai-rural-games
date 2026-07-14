@@ -114,3 +114,33 @@
     -webkit-touch-callout: default;
   }
 }
+
+/*
+ * Fallback de viewport para navegadores viejos (p. ej. el WebView/Chrome < 108
+ * de algunas Android TV) que NO soportan las unidades dinámicas dvh/dvw.
+ *
+ * Sin esto, `height: 100dvh` es una declaración inválida: el navegador la
+ * descarta y el contenedor cae a `height: auto` (alto del contenido), más bajo
+ * que la pantalla. Resultado: el layout "cree" que la pantalla es más baja, el
+ * bg-cover recorta el fondo y asoma el azul del <body> por abajo.
+ *
+ * Patrón de doble declaración: el navegador viejo se queda con la primera (vh/vw)
+ * e ignora la segunda (dvh/dvw) por inválida; el moderno usa la segunda. En una
+ * TV/kiosko no hay chrome dinámico del navegador, así que 100vh == 100dvh.
+ *
+ * Reglas planas (sin @layer) y al final del archivo → mismo peso de
+ * especificidad que las utilidades de Tailwind pero más tarde en el orden de
+ * fuente, así ganan el desempate sobre `.h-dvh`/`.w-dvw` generadas.
+ */
+.h-dvh {
+  height: 100vh;
+  height: 100dvh;
+}
+.w-dvw {
+  width: 100vw;
+  width: 100dvw;
+}
+.min-h-dvh {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
