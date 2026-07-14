@@ -39,7 +39,12 @@ export default defineConfig(({ mode }) => {
         lang: 'es',
         start_url: '/',
         scope: '/',
-        display: 'standalone',
+        // `fullscreen` = modo inmersivo: oculta la barra de estado (reloj) y la
+        // de navegación de Android. `standalone` las deja visibles.
+        // `display_override` fuerza fullscreen donde esté soportado; `display`
+        // queda como fallback para navegadores que no lo entienden.
+        display: 'fullscreen',
+        display_override: ['fullscreen'],
         orientation: 'portrait',
         background_color: '#003a5c',
         theme_color: '#003a5c',
