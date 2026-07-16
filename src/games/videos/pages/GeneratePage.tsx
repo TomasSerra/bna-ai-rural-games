@@ -67,7 +67,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
   const currentResultRef = useRef<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rawBlobRef = useRef<Blob | null>(null);
-  const recoverTriedRef = useRef(false);
+  const recoverStageRef = useRef<'blob' | 'remote' | 'reencode' | 'done'>('blob');
   const hasRunRef = useRef(false);
 
   const run = async () => {
@@ -78,7 +78,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     setPublicUrl(null);
     setVideoReady(false);
     setPreviewDiag(null);
-    recoverTriedRef.current = false;
+    recoverStageRef.current = 'blob';
     try {
       // Paso 1 — generar la imagen estilizada (preserva identidad).
       const imagePrompt = buildImagePrompt(opciones);
@@ -160,33 +160,52 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     if (p) p.catch(() => requestAnimationFrame(tryPlay));
   };
 
-  // Algunas TVs (decoder de hardware limitado) no logran decodificar el MP4
-  // crudo de pixverse y muestran el <video> en blanco, aunque el mismo video
-  // ande en el celu (que reproduce la versión re-encodeada por mediabunny).
-  // Cuando detectamos que el preview no pinta, re-encodeamos a un H.264 limpio
-  // y reintentamos con ese blob.
+  // Cuando el preview no pinta (blob en blanco en esa TV), recuperamos por
+  // etapas, de más barata a más costosa:
+  //   1. blob → URL remota de fal directo: streaming HTTP con range requests,
+  //      esquiva tanto los problemas de este browser con blobs grandes en
+  //      <video> como el `moov` al final del MP4 crudo de pixverse.
+  //   2. re-encode local a H.264 limpio (SOLO sirve si el equipo puede
+  //      encodear vía WebCodecs; varias TVs no pueden y esto no aplica).
   const recoverPreview = async () => {
-    if (recoverTriedRef.current) return;
-    recoverTriedRef.current = true;
-    const raw = rawBlobRef.current;
-    if (!raw) return;
-    if (!supportsVideoProcessing()) {
-      setPreviewDiag('El video no se reproduce y este equipo no soporta re-encode (WebCodecs no disponible).');
-      return;
+    // Etapa 1: probar la URL remota directa.
+    if (recoverStageRef.current === 'blob') {
+      recoverStageRef.current = 'remote';
+      if (publicUrl) {
+        setPreviewDiag(null);
+        setVideoReady(false);
+        setResultUrl(publicUrl); // el <video> pasa a streamear el MP4 remoto
+        return;
+      }
     }
-    try {
-      const reencoded = await processVideo(raw); // transcode limpio: sin trim ni watermark
-      if (currentResultRef.current) URL.revokeObjectURL(currentResultRef.current);
-      const objectUrl = URL.createObjectURL(reencoded);
-      currentResultRef.current = objectUrl;
-      setPreviewDiag(null);
-      setVideoReady(false);
-      setResultUrl(objectUrl);
-    } catch (err) {
-      setPreviewDiag(
-        `No se pudo re-encodear el video: ${err instanceof Error ? err.message : String(err)}`,
-      );
+
+    // Etapa 2: re-encode local (si el equipo puede encodear).
+    if (recoverStageRef.current === 'remote') {
+      recoverStageRef.current = 'reencode';
+      const raw = rawBlobRef.current;
+      if (raw && supportsVideoProcessing()) {
+        try {
+          const reencoded = await processVideo(raw); // transcode limpio: sin trim ni watermark
+          if (currentResultRef.current) URL.revokeObjectURL(currentResultRef.current);
+          const objectUrl = URL.createObjectURL(reencoded);
+          currentResultRef.current = objectUrl;
+          setPreviewDiag(null);
+          setVideoReady(false);
+          setResultUrl(objectUrl);
+          return;
+        } catch (err) {
+          recoverStageRef.current = 'done';
+          setPreviewDiag(
+            `No se pudo re-encodear el video: ${err instanceof Error ? err.message : String(err)}`,
+          );
+          return;
+        }
+      }
     }
+
+    // Sin más opciones que probar.
+    recoverStageRef.current = 'done';
+    setPreviewDiag('El video no se pudo reproducir en este equipo.');
   };
 
   // Watchdog: si a los ~3.5s el <video> no tiene dimensiones decodificadas
