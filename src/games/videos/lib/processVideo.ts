@@ -14,8 +14,10 @@ import {
 } from 'mediabunny';
 
 interface ProcessOptions {
-  trimStartSeconds: number;
-  watermarkUrl: string;
+  /** Segundos a recortar del inicio. Omitir/0 = sin recorte. */
+  trimStartSeconds?: number;
+  /** URL del watermark a quemar. Omitir = sin watermark (transcode limpio). */
+  watermarkUrl?: string;
 }
 
 export function supportsVideoProcessing(): boolean {
@@ -26,8 +28,8 @@ export function supportsVideoProcessing(): boolean {
   );
 }
 
-export async function processVideo(blob: Blob, opts: ProcessOptions): Promise<Blob> {
-  const watermark = await loadWatermark(opts.watermarkUrl);
+export async function processVideo(blob: Blob, opts: ProcessOptions = {}): Promise<Blob> {
+  const watermark = opts.watermarkUrl ? await loadWatermark(opts.watermarkUrl) : null;
 
   const input = new Input({
     source: new BlobSource(blob),
@@ -48,12 +50,18 @@ export async function processVideo(blob: Blob, opts: ProcessOptions): Promise<Bl
   const conversion = await Conversion.init({
     input,
     output,
-    trim: { start: opts.trimStartSeconds },
+    ...(opts.trimStartSeconds ? { trim: { start: opts.trimStartSeconds } } : {}),
     video: {
+      // Sin watermark igual forzamos el transcode a AVC: re-encodea a un H.264
+      // "de librito" (perfil/nivel/moov) que los decoders quisquillosos de
+      // algunas TVs aceptan aunque rechacen el MP4 crudo de pixverse.
       codec: 'avc',
       bitrate: QUALITY_HIGH,
       forceTranscode: true,
       process: (sample) => {
+        // Sin watermark: transcode puro, devolvemos el frame sin tocar.
+        if (!watermark) return sample;
+
         const w = sample.displayWidth;
         const h = sample.displayHeight;
         if (!canvas || canvas.width !== w || canvas.height !== h) {

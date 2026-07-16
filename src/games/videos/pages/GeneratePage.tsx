@@ -9,6 +9,7 @@ import { EmailSendDialog } from '@shared/components/EmailSendDialog';
 import { Skeleton } from '@shared/components/ui/skeleton';
 import { generateImage } from '@videos/lib/image';
 import { generateVideo } from '@videos/lib/video';
+import { processVideo, supportsVideoProcessing } from '@videos/lib/processVideo';
 import { buildImagePrompt, buildVideoPrompt } from '@videos/lib/prompt';
 import { cn } from '@shared/lib/utils';
 import type { Opciones } from '@videos/types';
@@ -62,8 +63,11 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
   const [statusMsg, setStatusMsg] = useState<string>(STATUS_MESSAGES[0]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
+  const [previewDiag, setPreviewDiag] = useState<string | null>(null);
   const currentResultRef = useRef<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const rawBlobRef = useRef<Blob | null>(null);
+  const recoverTriedRef = useRef(false);
   const hasRunRef = useRef(false);
 
   const run = async () => {
@@ -73,6 +77,8 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     setErrorMsg(null);
     setPublicUrl(null);
     setVideoReady(false);
+    setPreviewDiag(null);
+    recoverTriedRef.current = false;
     try {
       // Paso 1 — generar la imagen estilizada (preserva identidad).
       const imagePrompt = buildImagePrompt(opciones);
@@ -94,6 +100,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
         inputImageBase64: image.base64,
       });
       if (currentResultRef.current) URL.revokeObjectURL(currentResultRef.current);
+      rawBlobRef.current = blob;
       const objectUrl = URL.createObjectURL(blob);
       currentResultRef.current = objectUrl;
       setResultUrl(objectUrl);
@@ -152,6 +159,50 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     const p = v.play();
     if (p) p.catch(() => requestAnimationFrame(tryPlay));
   };
+
+  // Algunas TVs (decoder de hardware limitado) no logran decodificar el MP4
+  // crudo de pixverse y muestran el <video> en blanco, aunque el mismo video
+  // ande en el celu (que reproduce la versión re-encodeada por mediabunny).
+  // Cuando detectamos que el preview no pinta, re-encodeamos a un H.264 limpio
+  // y reintentamos con ese blob.
+  const recoverPreview = async () => {
+    if (recoverTriedRef.current) return;
+    recoverTriedRef.current = true;
+    const raw = rawBlobRef.current;
+    if (!raw) return;
+    if (!supportsVideoProcessing()) {
+      setPreviewDiag('El video no se reproduce y este equipo no soporta re-encode (WebCodecs no disponible).');
+      return;
+    }
+    try {
+      const reencoded = await processVideo(raw); // transcode limpio: sin trim ni watermark
+      if (currentResultRef.current) URL.revokeObjectURL(currentResultRef.current);
+      const objectUrl = URL.createObjectURL(reencoded);
+      currentResultRef.current = objectUrl;
+      setPreviewDiag(null);
+      setVideoReady(false);
+      setResultUrl(objectUrl);
+    } catch (err) {
+      setPreviewDiag(
+        `No se pudo re-encodear el video: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  };
+
+  // Watchdog: si a los ~3.5s el <video> no tiene dimensiones decodificadas
+  // (videoWidth 0 / readyState bajo), asumimos fallo de decodificación silencioso
+  // y disparamos la recuperación.
+  useEffect(() => {
+    if (phase !== 'done' || !resultUrl) return;
+    const id = window.setTimeout(() => {
+      const v = videoRef.current;
+      if (!v || v.videoWidth === 0 || v.readyState < 2) {
+        void recoverPreview();
+      }
+    }, 3500);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, resultUrl]);
 
   return (
     <div className="flex h-dvh w-dvw flex-col gap-4 overflow-hidden p-6">
@@ -230,12 +281,32 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
               onLoadedData={tryPlay}
               // Fade in once playback has actually started, so we never flash the
               // bare `bg-muted` container before the first frame is decoded.
-              onPlaying={() => setVideoReady(true)}
+              onPlaying={() => {
+                setVideoReady(true);
+                setPreviewDiag(null);
+              }}
+              // Some TV decoders reject the raw MP4 with a hard error → recover
+              // by re-encoding. (Silent failures are caught by the watchdog.)
+              onError={(e) => {
+                const err = e.currentTarget.error;
+                setPreviewDiag(
+                  `Error de reproducción (código ${err?.code ?? '?'})${err?.message ? `: ${err.message}` : ''}`,
+                );
+                void recoverPreview();
+              }}
               className={cn(
                 'h-full w-full object-cover transition-opacity duration-200',
                 videoReady ? 'opacity-100' : 'opacity-0',
               )}
             />
+          )}
+
+          {/* Diagnóstico temporal: visible en la TV que falla para saber el modo
+              exacto de fallo (código de MediaError / si soporta WebCodecs). */}
+          {phase === 'done' && previewDiag && !videoReady && (
+            <div className="absolute inset-x-0 bottom-0 z-10 bg-black/75 p-2 text-center text-xs text-white">
+              {previewDiag}
+            </div>
           )}
 
           {phase === 'error' && errorMsg && (
