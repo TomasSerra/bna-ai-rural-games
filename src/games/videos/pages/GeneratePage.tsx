@@ -61,7 +61,9 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string>(STATUS_MESSAGES[0]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const currentResultRef = useRef<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const hasRunRef = useRef(false);
 
   const run = async () => {
@@ -70,6 +72,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     setGeneratedImageUrl(null);
     setErrorMsg(null);
     setPublicUrl(null);
+    setVideoReady(false);
     try {
       // Paso 1 — generar la imagen estilizada (preserva identidad).
       const imagePrompt = buildImagePrompt(opciones);
@@ -139,6 +142,17 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     return () => window.clearInterval(id);
   }, [phase]);
 
+  // Algunas TVs con Opera/Android ignoran el atributo `autoPlay`: pedimos la
+  // reproducción a mano (muted → autoplay permitido) y reintentamos si el
+  // navegador la rechaza, hasta que haya frames decodificados.
+  const tryPlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    const p = v.play();
+    if (p) p.catch(() => requestAnimationFrame(tryPlay));
+  };
+
   return (
     <div className="flex h-dvh w-dvw flex-col gap-4 overflow-hidden p-6">
       {showConfetti && (
@@ -204,22 +218,23 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
 
           {phase === 'done' && resultUrl && (
             <video
+              ref={videoRef}
               src={resultUrl}
               autoPlay
               muted
               playsInline
-              // veo uses the selfie as the literal first frame, which reads as
-              // a freeze before the animation kicks in. Skip past it on load
-              // AND on every loop — the native `loop` attribute would replay
-              // from t=0 every time and bring the freeze back.
-              onLoadedMetadata={(e) => {
-                e.currentTarget.currentTime = 0.7;
-              }}
-              onEnded={(e) => {
-                e.currentTarget.currentTime = 0.7;
-                void e.currentTarget.play();
-              }}
-              className="h-full w-full object-cover"
+              loop
+              // Kick off playback imperatively: some Android/Opera TVs ignore the
+              // `autoPlay` attribute and would otherwise stay on a blank first
+              // frame forever. tryPlay() re-asserts muted and retries on reject.
+              onLoadedData={tryPlay}
+              // Fade in once playback has actually started, so we never flash the
+              // bare `bg-muted` container before the first frame is decoded.
+              onPlaying={() => setVideoReady(true)}
+              className={cn(
+                'h-full w-full object-cover transition-opacity duration-200',
+                videoReady ? 'opacity-100' : 'opacity-0',
+              )}
             />
           )}
 
