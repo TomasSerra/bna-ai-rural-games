@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { ApiKeyDialog } from '@shared/components/ApiKeyDialog';
 import { CapturePage } from '@videos/pages/CapturePage';
@@ -29,8 +29,6 @@ export default function VideosGame({ onExit }: VideosGameProps) {
   const [opciones, setOpciones] = useState<Opciones>(DEFAULT_OPCIONES);
   const [page, setPage] = useState<Page>('home');
 
-  const lastSecretTapRef = useRef<number>(0);
-
   useEffect(() => {
     if (!apiKey) setKeyDialogOpen(true);
   }, [apiKey]);
@@ -43,15 +41,7 @@ export default function VideosGame({ onExit }: VideosGameProps) {
     setKeyDialogOpen(false);
   };
 
-  const handleSecretTap = () => {
-    const now = Date.now();
-    if (now - lastSecretTapRef.current < 600) {
-      setKeyDialogOpen(true);
-      lastSecretTapRef.current = 0;
-    } else {
-      lastSecretTapRef.current = now;
-    }
-  };
+  const handleSecretTap = () => setKeyDialogOpen(true);
 
   return (
     <div className="h-dvh w-dvw overflow-hidden bg-[url('/videos/bg-game.png')] bg-cover bg-center bg-no-repeat">
@@ -74,7 +64,7 @@ export default function VideosGame({ onExit }: VideosGameProps) {
         </button>
       )}
 
-      {/* Hidden hot-corner: double-tap the top-right corner to open the API key dialog. */}
+      {/* Hidden hot-corner: tap the top-right corner to open the API key dialog. */}
       <button
         type="button"
         aria-label="Configuración"
