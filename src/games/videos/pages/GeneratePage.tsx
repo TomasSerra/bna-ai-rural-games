@@ -3,10 +3,11 @@ import Confetti from 'react-confetti';
 import Lottie from 'lottie-react';
 import { ArrowLeft, Check, RotateCw, ThumbsUp } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Alert, AlertDescription, AlertTitle } from '@shared/components/ui/alert';
 import { Button } from '@shared/components/ui/button';
 import { EmailSendDialog } from '@shared/components/EmailSendDialog';
+import { GenerationError } from '@shared/components/GenerationError';
 import { Skeleton } from '@shared/components/ui/skeleton';
+import { toFriendlyError, type FriendlyError } from '@shared/lib/errors';
 import { generateImage } from '@videos/lib/image';
 import { generateVideo } from '@videos/lib/video';
 import { processVideo, supportsVideoProcessing } from '@videos/lib/processVideo';
@@ -59,11 +60,13 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [friendlyError, setFriendlyError] = useState<FriendlyError | null>(null);
   const [statusMsg, setStatusMsg] = useState<string>(STATUS_MESSAGES[0]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
-  const [previewDiag, setPreviewDiag] = useState<string | null>(null);
+  // Cuando el <video> no reproduce en este equipo, mostramos la imagen generada
+  // como fallback visual (el QR/descarga siguen apuntando al video real).
+  const [previewFailed, setPreviewFailed] = useState(false);
   const currentResultRef = useRef<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rawBlobRef = useRef<Blob | null>(null);
@@ -74,10 +77,10 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     setPhase('generating');
     setStep('image');
     setGeneratedImageUrl(null);
-    setErrorMsg(null);
+    setFriendlyError(null);
     setPublicUrl(null);
     setVideoReady(false);
-    setPreviewDiag(null);
+    setPreviewFailed(false);
     recoverStageRef.current = 'blob';
     try {
       // Paso 1 — generar la imagen estilizada (preserva identidad).
@@ -107,9 +110,8 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
       setPublicUrl(falUrl);
       setPhase('done');
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : 'Error desconocido';
-      setErrorMsg(msg);
+      console.warn('[videos] generación falló', err);
+      setFriendlyError(toFriendlyError(err));
       setPhase('error');
     }
   };
@@ -172,7 +174,6 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
     if (recoverStageRef.current === 'blob') {
       recoverStageRef.current = 'remote';
       if (publicUrl) {
-        setPreviewDiag(null);
         setVideoReady(false);
         setResultUrl(publicUrl); // el <video> pasa a streamear el MP4 remoto
         return;
@@ -189,23 +190,21 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
           if (currentResultRef.current) URL.revokeObjectURL(currentResultRef.current);
           const objectUrl = URL.createObjectURL(reencoded);
           currentResultRef.current = objectUrl;
-          setPreviewDiag(null);
           setVideoReady(false);
           setResultUrl(objectUrl);
           return;
         } catch (err) {
           recoverStageRef.current = 'done';
-          setPreviewDiag(
-            `No se pudo re-encodear el video: ${err instanceof Error ? err.message : String(err)}`,
-          );
+          console.warn('[videos] no se pudo re-encodear el video', err);
+          setPreviewFailed(true); // fallback a la imagen generada
           return;
         }
       }
     }
 
-    // Sin más opciones que probar.
+    // Sin más opciones que probar: mostramos la imagen generada como fallback.
     recoverStageRef.current = 'done';
-    setPreviewDiag('El video no se pudo reproducir en este equipo.');
+    setPreviewFailed(true);
   };
 
   // Watchdog: si a los ~3.5s el <video> no tiene dimensiones decodificadas
@@ -286,7 +285,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
             </>
           )}
 
-          {phase === 'done' && resultUrl && (
+          {phase === 'done' && resultUrl && !previewFailed && (
             <video
               ref={videoRef}
               src={resultUrl}
@@ -300,17 +299,12 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
               onLoadedData={tryPlay}
               // Fade in once playback has actually started, so we never flash the
               // bare `bg-muted` container before the first frame is decoded.
-              onPlaying={() => {
-                setVideoReady(true);
-                setPreviewDiag(null);
-              }}
+              onPlaying={() => setVideoReady(true)}
               // Some TV decoders reject the raw MP4 with a hard error → recover
               // by re-encoding. (Silent failures are caught by the watchdog.)
               onError={(e) => {
                 const err = e.currentTarget.error;
-                setPreviewDiag(
-                  `Error de reproducción (código ${err?.code ?? '?'})${err?.message ? `: ${err.message}` : ''}`,
-                );
+                console.warn('[videos] error de reproducción', err?.code, err?.message);
                 void recoverPreview();
               }}
               className={cn(
@@ -320,21 +314,18 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
             />
           )}
 
-          {/* Diagnóstico temporal: visible en la TV que falla para saber el modo
-              exacto de fallo (código de MediaError / si soporta WebCodecs). */}
-          {phase === 'done' && previewDiag && !videoReady && (
-            <div className="absolute inset-x-0 bottom-0 z-10 bg-black/75 p-2 text-center text-xs text-white">
-              {previewDiag}
-            </div>
+          {/* Fallback: la TV no pudo reproducir el video → mostramos la imagen
+              generada. El QR/descarga siguen apuntando al video real. */}
+          {phase === 'done' && previewFailed && generatedImageUrl && (
+            <img
+              src={generatedImageUrl}
+              alt="Imagen generada"
+              className="h-full w-full object-cover"
+            />
           )}
 
-          {phase === 'error' && errorMsg && (
-            <div className="flex h-full items-center justify-center p-6">
-              <Alert variant="destructive">
-                <AlertTitle>Algo salió mal</AlertTitle>
-                <AlertDescription>{errorMsg}</AlertDescription>
-              </Alert>
-            </div>
+          {phase === 'error' && friendlyError && (
+            <GenerationError error={friendlyError} />
           )}
         </div>
       </div>

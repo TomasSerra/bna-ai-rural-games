@@ -3,11 +3,12 @@ import Confetti from 'react-confetti';
 import Lottie from 'lottie-react';
 import { ArrowLeft, RotateCw, ThumbsUp } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Alert, AlertDescription, AlertTitle } from '@shared/components/ui/alert';
 import { Button } from '@shared/components/ui/button';
 import { EmailSendDialog } from '@shared/components/EmailSendDialog';
+import { GenerationError } from '@shared/components/GenerationError';
 import { Skeleton } from '@shared/components/ui/skeleton';
-import { FluxError, generateImage } from '@imagenes/lib/flux';
+import { toFriendlyError, type FriendlyError } from '@shared/lib/errors';
+import { generateImage } from '@imagenes/lib/flux';
 import { buildPrompt } from '@imagenes/lib/prompt';
 import type { Opciones } from '@imagenes/types';
 import loadingAnimation from '@shared/assets/tractor.json';
@@ -50,7 +51,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
   const [phase, setPhase] = useState<Phase>('generating');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [friendlyError, setFriendlyError] = useState<FriendlyError | null>(null);
   const [statusMsg, setStatusMsg] = useState<string>(STATUS_MESSAGES[0]);
   const [showConfetti, setShowConfetti] = useState(false);
   const currentResultRef = useRef<string | null>(null);
@@ -58,7 +59,7 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
 
   const run = async () => {
     setPhase('generating');
-    setErrorMsg(null);
+    setFriendlyError(null);
     setPublicUrl(null);
     try {
       const { prompt, extraReferenceUrl } = buildPrompt(opciones);
@@ -75,13 +76,8 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
       setPublicUrl(falUrl);
       setPhase('done');
     } catch (err) {
-      const msg =
-        err instanceof FluxError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : 'Error desconocido';
-      setErrorMsg(msg);
+      console.warn('[imagenes] generación falló', err);
+      setFriendlyError(toFriendlyError(err));
       setPhase('error');
     }
   };
@@ -184,13 +180,8 @@ export function GeneratePage({ apiKey, photo, opciones, onBack, onDone }: Genera
             />
           )}
 
-          {phase === 'error' && errorMsg && (
-            <div className="flex h-full items-center justify-center p-6">
-              <Alert variant="destructive">
-                <AlertTitle>Algo salió mal</AlertTitle>
-                <AlertDescription>{errorMsg}</AlertDescription>
-              </Alert>
-            </div>
+          {phase === 'error' && friendlyError && (
+            <GenerationError error={friendlyError} />
           )}
         </div>
       </div>
