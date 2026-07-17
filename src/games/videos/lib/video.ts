@@ -1,28 +1,19 @@
-// Cliente para fal.ai (pixverse v4.5 / image-to-video).
-//
-// Segundo paso del flujo: toma `prompt` + una sola `image_url` (la imagen YA
-// estilizada por nano-banana) y la anima en un clip de 5 segundos SIN audio.
-// pixverse usa la imagen como primer cuadro; el estilo y la escena ya vienen
-// resueltos en la imagen, así que el prompt solo describe el movimiento. El
-// aspect ratio (9:16) sale de la propia imagen.
+// Segundo paso del flujo de video: anima la imagen estilizada con PixVerse.
+
+import {
+  GenerationServiceError,
+  generationFetch,
+  httpGenerationError,
+  parseGenerationJson,
+  stringifyGenerationPayload,
+} from '@shared/lib/errors';
 
 const SUBMIT_URL = 'https://queue.fal.run/fal-ai/pixverse/v4.5/image-to-video';
 
 const POLL_INTERVAL_MS = 3000;
-const POLL_TIMEOUT_MS = 360_000; // el video tarda bastante más que un modelo de imagen
+const POLL_TIMEOUT_MS = 360_000;
 
 export const VIDEO_MODEL = 'fal-ai/pixverse/v4.5/image-to-video';
-
-export class VideoError extends Error {
-  constructor(
-    message: string,
-    public readonly status?: string,
-    public readonly httpStatus?: number
-  ) {
-    super(message);
-    this.name = 'VideoError';
-  }
-}
 
 interface SubmitResponse {
   request_id: string;
@@ -54,7 +45,7 @@ interface ResultResponse {
 interface GenerateArgs {
   apiKey: string;
   prompt: string;
-  /** Base64-encoded JPEG/PNG, no `data:` prefix. La imagen YA estilizada. */
+  /** Base64, sin prefijo data:, de la imagen ya estilizada. */
   inputImageBase64: string;
   signal?: AbortSignal;
 }
@@ -67,23 +58,22 @@ function authHeaders(apiKey: string): HeadersInit {
 }
 
 export interface GenerateResult {
-  /** MP4 bytes — used for the in-page <video> preview via createObjectURL. */
   blob: Blob;
-  /** Public fal.media URL — encode this into the phone-scannable QR. */
   url: string;
 }
 
 export async function generateVideo(args: GenerateArgs): Promise<GenerateResult> {
-  // fal/veo's content moderation produces non-deterministic 422s — the same
-  // selfie+prompt sometimes passes on a retry. One automatic retry, then we
-  // surface the error to the user.
+  // La moderación de PixVerse puede responder 422 de forma no determinista.
+  // Conservamos exactamente un reintento automático para ese caso.
   try {
     return await generateVideoOnce(args);
   } catch (err) {
     if (
-      err instanceof VideoError &&
-      err.httpStatus === 422 &&
-      !args.signal?.aborted
+      err instanceof GenerationServiceError
+      && err.target === 'VID'
+      && err.stage === 'SUBMIT'
+      && err.httpStatus === 422
+      && !args.signal?.aborted
     ) {
       return await generateVideoOnce(args);
     }
@@ -99,110 +89,158 @@ async function generateVideoOnce({
 }: GenerateArgs): Promise<GenerateResult> {
   const image_url = `data:image/jpeg;base64,${inputImageBase64}`;
 
-  const submit = await fetch(SUBMIT_URL, {
+  const submit = await generationFetch('VID', 'SUBMIT', SUBMIT_URL, {
     method: 'POST',
     headers: {
       ...authHeaders(apiKey),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
+    body: stringifyGenerationPayload('VID', {
       prompt,
       image_url,
-      // pixverse v4.5 image-to-video: duración mínima 5s; el aspect ratio (9:16)
-      // sale de la imagen, no es un parámetro. No genera audio.
       duration: '5',
       resolution: '720p',
-      negative_prompt:
-        'extra fingers, warped hands, flickering, watermark, text',
+      negative_prompt: 'extra fingers, warped hands, flickering, watermark, text',
     }),
     signal,
   });
 
   if (!submit.ok) {
-    const text = await submit.text().catch(() => '');
-    if (submit.status === 401 || submit.status === 403) {
-      throw new VideoError('API key inválida o sin permisos. Revisá tu clave en fal.ai/dashboard/keys.');
-    }
-    throw new VideoError(
-      `Falló el envío a fal.ai (${submit.status}): ${text || submit.statusText}`,
-      undefined,
-      submit.status
-    );
+    const detail = await submit.text().catch(() => '');
+    throw httpGenerationError('VID', 'SUBMIT', submit, detail);
   }
 
-  const submitBody = (await submit.json()) as SubmitResponse;
+  const submitBody = await parseGenerationJson<SubmitResponse>('VID', 'SUBMIT', submit);
   if (!submitBody.request_id) {
-    throw new VideoError('Respuesta inesperada de fal.ai: falta request_id.');
+    throw new GenerationServiceError('La respuesta no incluyó request_id.', {
+      target: 'VID',
+      stage: 'SUBMIT',
+      reason: 'EMPTY',
+    });
+  }
+  const requestId = submitBody.request_id;
+  const statusUrl = submitBody.status_url
+    ?? `${SUBMIT_URL}/requests/${requestId}/status`;
+  const resultEndpoint = submitBody.response_url
+    ?? `${SUBMIT_URL}/requests/${requestId}`;
+
+  await waitUntilDone(statusUrl, requestId, apiKey, signal);
+  const resultUrl = await fetchResultVideoUrl(resultEndpoint, requestId, apiKey, signal);
+
+  const videoResponse = await generationFetch('VID', 'DOWNLOAD', resultUrl, { signal }, requestId);
+  if (!videoResponse.ok) {
+    const detail = await videoResponse.text().catch(() => '');
+    throw httpGenerationError('VID', 'DOWNLOAD', videoResponse, detail, requestId);
   }
 
-  // veo expone una ruta anidada — usamos las URLs que devuelve el submit en vez
-  // de construirlas a mano.
-  const statusUrl = submitBody.status_url ?? `${SUBMIT_URL}/requests/${submitBody.request_id}/status`;
-  const resultEndpoint = submitBody.response_url ?? `${SUBMIT_URL}/requests/${submitBody.request_id}`;
-
-  await waitUntilDone(statusUrl, apiKey, signal);
-
-  const resultUrl = await fetchResultVideoUrl(resultEndpoint, apiKey, signal);
-
-  const videoResp = await fetch(resultUrl, { signal });
-  if (!videoResp.ok) {
-    throw new VideoError(`No pude descargar el video generado (${videoResp.status}).`);
+  let blob: Blob;
+  try {
+    blob = await videoResponse.blob();
+  } catch (cause) {
+    throw new GenerationServiceError('No pude leer los bytes del video generado.', {
+      target: 'VID',
+      stage: 'DECODE',
+      reason: 'INVALID',
+      requestId,
+      cause,
+    });
   }
-  const blob = await videoResp.blob();
+  if (blob.size === 0) {
+    throw new GenerationServiceError('El video generado está vacío.', {
+      target: 'VID',
+      stage: 'DECODE',
+      reason: 'EMPTY',
+      requestId,
+    });
+  }
   return { blob, url: resultUrl };
 }
 
 async function waitUntilDone(
   statusUrl: string,
+  requestId: string,
   apiKey: string,
-  signal: AbortSignal | undefined
+  signal: AbortSignal | undefined,
 ): Promise<void> {
   const start = Date.now();
 
   while (Date.now() - start < POLL_TIMEOUT_MS) {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
-    const resp = await fetch(statusUrl, { headers: authHeaders(apiKey), signal });
-    if (!resp.ok) {
-      throw new VideoError(`Polling de estado falló (${resp.status}): ${resp.statusText}`);
+    const response = await generationFetch(
+      'VID',
+      'POLL',
+      statusUrl,
+      { headers: authHeaders(apiKey), signal },
+      requestId,
+    );
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw httpGenerationError('VID', 'POLL', response, detail, requestId);
     }
-    const body = (await resp.json()) as StatusResponse;
+    const body = await parseGenerationJson<StatusResponse>('VID', 'POLL', response, requestId);
 
     switch (body.status) {
       case 'COMPLETED':
         return;
       case 'FAILED':
-        throw new VideoError('fal.ai reportó FAILED al generar el video.', body.status);
+        throw new GenerationServiceError('fal.ai reportó FAILED al generar el video.', {
+          target: 'VID',
+          stage: 'POLL',
+          reason: 'FAILED',
+          requestId,
+        });
       case 'IN_QUEUE':
       case 'IN_PROGRESS':
-      default:
         await sleep(POLL_INTERVAL_MS, signal);
         break;
+      default:
+        throw new GenerationServiceError('fal.ai devolvió un estado desconocido.', {
+          target: 'VID',
+          stage: 'POLL',
+          reason: 'INVALID',
+          requestId,
+          detail: String(body.status),
+        });
     }
   }
 
-  throw new VideoError('Timeout esperando el video (más de 6 minutos).');
+  throw new GenerationServiceError('Timeout esperando el video.', {
+    target: 'VID',
+    stage: 'POLL',
+    reason: 'TIMEOUT',
+    requestId,
+  });
 }
 
 async function fetchResultVideoUrl(
   resultEndpoint: string,
+  requestId: string,
   apiKey: string,
-  signal: AbortSignal | undefined
+  signal: AbortSignal | undefined,
 ): Promise<string> {
-  const resp = await fetch(resultEndpoint, {
-    headers: authHeaders(apiKey),
-    signal,
-  });
-  if (!resp.ok) {
-    throw new VideoError(`No pude leer el resultado (${resp.status}): ${resp.statusText}`);
+  const response = await generationFetch(
+    'VID',
+    'RESULT',
+    resultEndpoint,
+    { headers: authHeaders(apiKey), signal },
+    requestId,
+  );
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw httpGenerationError('VID', 'RESULT', response, detail, requestId);
   }
-  const body = (await resp.json()) as ResultResponse;
+  const body = await parseGenerationJson<ResultResponse>('VID', 'RESULT', response, requestId);
 
   const url = body.video?.url;
   if (!url) {
-    throw new VideoError(
-      body.error || body.detail || 'Resultado sin video — probá de nuevo.'
-    );
+    throw new GenerationServiceError('El resultado no incluyó un video.', {
+      target: 'VID',
+      stage: 'RESULT',
+      reason: 'EMPTY',
+      requestId,
+      detail: body.error || body.detail,
+    });
   }
   return url;
 }
@@ -213,12 +251,12 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       reject(new DOMException('Aborted', 'AbortError'));
       return;
     }
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       signal?.removeEventListener('abort', onAbort);
       resolve();
     }, ms);
     const onAbort = () => {
-      clearTimeout(t);
+      clearTimeout(timer);
       reject(new DOMException('Aborted', 'AbortError'));
     };
     signal?.addEventListener('abort', onAbort);

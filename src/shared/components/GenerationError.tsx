@@ -1,9 +1,22 @@
-import { AlertTriangle, ServerCrash, WifiOff } from 'lucide-react';
+import {
+  AlertTriangle,
+  FileWarning,
+  KeyRound,
+  ServerCrash,
+  ShieldAlert,
+  Timer,
+  WifiOff,
+} from 'lucide-react';
 import type { FriendlyError, FriendlyErrorKind } from '@shared/lib/errors';
 
 const ICONS: Record<FriendlyErrorKind, typeof WifiOff> = {
   connection: WifiOff,
+  authentication: KeyRound,
+  'rate-limit': Timer,
+  input: ShieldAlert,
+  timeout: Timer,
   server: ServerCrash,
+  response: FileWarning,
   unknown: AlertTriangle,
 };
 
@@ -28,6 +41,9 @@ export function GenerationError({ error }: GenerationErrorProps) {
           {error.title}
         </h3>
         <p className="text-lg leading-snug text-[#7A5A38]">{error.description}</p>
+        <code className="rounded-md bg-[#E8D5B5] px-3 py-1.5 font-mono text-sm font-bold tracking-wide text-[#5B3A1E]">
+          {error.code}
+        </code>
       </div>
     </div>
   );
